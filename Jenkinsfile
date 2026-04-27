@@ -6,6 +6,11 @@ pipeline {
         PATH = "/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
     }
 
+    triggers {
+        // Checks GitHub every minute for new pushes and automatically triggers the build
+        pollSCM('* * * * *')
+    }
+
     stages {
         stage('Checkout Source') {
             steps {
