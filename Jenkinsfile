@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Set Node environment to production for optimized builds
-        NODE_ENV = 'production'
         // Ensure Jenkins can find npm (typically in /usr/local/bin or /opt/homebrew/bin)
         PATH = "/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
     }
