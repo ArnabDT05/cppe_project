@@ -106,7 +106,7 @@ export default function App() {
         {/* ── Header ─────────────────────────────────────────── */}
         <header className="app-header">
           <h1>Telecom Network Analytics</h1>
-          <p>Chennai Region · Live data from Flask API · Signal-based drop prediction</p>
+          <p>Chennai Region · Live data from Flask API · Signal-based drop predictions</p>
         </header>
 
         {/* ── API error banner ─────────────────────────────────── */}
