@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import HourlyDropChart from './HourlyDropChart'
+import SignalTrendChart from './SignalTrendChart'
+import SignalDistChart from './SignalDistChart'
 import PredictionForm  from './PredictionForm'
 
 // ── API endpoint ────────────────────────────────────────────────
@@ -11,9 +13,13 @@ const API_URL = 'http://127.0.0.1:5000/stats'
 
 // ── Fallback data (shown while loading or if API is offline) ────
 const FALLBACK = {
-  summary: { total_calls: 1000, calls_dropped: 372, calls_completed: 628, drop_pct: 37.2 },
-  hourly:  Array.from({ length: 24 }, (_, h) => ({ hour: h, drops: 0, drop_rate: 0 })),
+  summary: { 
+    total_calls: 1000, calls_dropped: 372, calls_completed: 628, drop_pct: 37.2,
+    avg_signal: -85.5, critical_calls: 120, health_index: 62.8, active_towers: 10 
+  },
+  minute_series:  [],
   towers:  [],
+  signal_dist: { Excellent: 200, Good: 400, Fair: 280, Critical: 120 }
 }
 
 /* ── Helper components ─────────────────────────────────────── */
@@ -53,7 +59,7 @@ export default function App() {
   const [loading,  setLoading]  = useState(true)
   const [apiError, setApiError] = useState(null)
 
-  // ── Fetch /stats on mount ────────────────────────────────────
+  // ── Fetch /stats dynamically every second ──────────────────
   useEffect(() => {
     let cancelled = false
 
@@ -73,15 +79,24 @@ export default function App() {
       }
     }
 
+    // Fetch immediately on mount
     fetchStats()
-    return () => { cancelled = true }
+    
+    // Then poll every 1 second for live updates
+    const interval = setInterval(fetchStats, 1000)
+
+    return () => { 
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [])
 
   // Use API data or fallback
-  const data    = apiData ?? FALLBACK
-  const summary = data.summary
-  const hourly  = data.hourly
-  const towers  = data.towers.slice(0, 5)
+  const data          = apiData ?? FALLBACK
+  const summary       = data.summary
+  const minute_series = data.minute_series || []
+  const towers        = data.towers.slice(0, 5)
+  const signal_dist   = data.signal_dist || {}
 
   /* ── Render ─────────────────────────────────────────────── */
   return (
@@ -90,92 +105,104 @@ export default function App() {
 
         {/* ── Header ─────────────────────────────────────────── */}
         <header className="app-header">
-          <h1>📡 Telecom Network Analytics</h1>
+          <h1>Telecom Network Analytics</h1>
           <p>Chennai Region · Live data from Flask API · Signal-based drop prediction</p>
         </header>
 
         {/* ── API error banner ─────────────────────────────────── */}
         {apiError && <ErrorBanner message={apiError} />}
 
-        {/* ── Section 1: KPI cards ─────────────────────────────── */}
-        {loading ? <LoadingCard text="Fetching stats from API…" /> : (
-          <div className="kpi-row">
-            <div className="kpi-card">
-              <span className="kpi-card-label">Total Calls</span>
-              <span className="kpi-card-value">{summary.total_calls.toLocaleString()}</span>
-              <span className="kpi-card-sub">All records</span>
+        {/* ── Terminal Metrics Row ───────────────────────────────── */}
+        {loading ? <LoadingCard text="Fetching terminal stats…" /> : (
+          <div className="metrics-row">
+            <div className="metric-box">
+              <p className="metric-title">TOTAL CALLS</p>
+              <p className="metric-val">{summary.total_calls.toLocaleString()}</p>
             </div>
-            <div className="kpi-card">
-              <span className="kpi-card-label">Calls Dropped</span>
-              <span className="kpi-card-value color-red">{summary.calls_dropped.toLocaleString()}</span>
-              <span className="kpi-card-sub">signal &lt; −95 dBm</span>
+            <div className="metric-box">
+              <p className="metric-title">CALLS DROPPED</p>
+              <p className="metric-val" style={{color: '#ef4444'}}>{summary.calls_dropped.toLocaleString()}</p>
             </div>
-            <div className="kpi-card">
-              <span className="kpi-card-label">Calls Completed</span>
-              <span className="kpi-card-value color-green">{summary.calls_completed.toLocaleString()}</span>
-              <span className="kpi-card-sub">signal ≥ −95 dBm</span>
+            <div className="metric-box">
+              <p className="metric-title">NETWORK HEALTH</p>
+              <p className="metric-val" style={{color: summary.health_index > 80 ? '#10b981' : '#f59e0b'}}>{summary.health_index}%</p>
             </div>
-            <div className="kpi-card">
-              <span className="kpi-card-label">Drop Rate</span>
-              <span className="kpi-card-value">{summary.drop_pct}%</span>
-              <span className="kpi-card-sub">of all calls</span>
+            <div className="metric-box">
+              <p className="metric-title">AVG SIGNAL</p>
+              <p className="metric-val">{summary.avg_signal} dBm</p>
+            </div>
+            <div className="metric-box">
+              <p className="metric-title">CRITICAL CALLS</p>
+              <p className="metric-val" style={{color: summary.critical_calls > 100 ? '#ef4444' : '#f59e0b'}}>{summary.critical_calls}</p>
+            </div>
+            <div className="metric-box">
+              <p className="metric-title">ACTIVE TOWERS</p>
+              <p className="metric-val">{summary.active_towers}</p>
             </div>
           </div>
         )}
 
-        {/* ── Section 2: Hourly line chart ─────────────────────── */}
-        <div className="card">
-          <p className="card-label">🕐 Hourly Call Drop Distribution</p>
-          {loading
-            ? <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Loading chart…</p>
-            : <div className="chart-container"><HourlyDropChart hourly={hourly} /></div>
-          }
-        </div>
+        {/* ── Dashboard Grid ─────────────────────────────────────── */}
+        <div className="dashboard-grid terminal-grid">
 
-        {/* ── Section 3: Top towers table ──────────────────────── */}
-        <div className="card">
-          <p className="card-label">🗼 Top 5 Towers — Highest Drop Rate</p>
-          {loading ? (
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Loading towers…</p>
-          ) : towers.length === 0 ? (
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>No tower data available.</p>
-          ) : (
-            <table className="tower-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '3rem' }}>#</th>
-                  <th>Tower ID</th>
-                  <th>Avg Signal</th>
-                  <th>Total Calls</th>
-                  <th className="mini-bar-cell">Drop Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {towers.map((t, i) => (
-                  <tr key={t.id}>
-                    <td><span className="rank-badge">{i + 1}</span></td>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{t.id}</td>
-                    <td style={{ color: '#6b7280' }}>{t.avg_signal} dBm</td>
-                    <td style={{ color: '#6b7280' }}>{t.total_calls}</td>
-                    <td className="mini-bar-cell">
-                      <div className="mini-bar-wrap">
-                        <div className="mini-bar-track">
-                          <div className="mini-bar-fill" style={{ width: `${t.drop_rate}%` }} />
-                        </div>
-                        <span className="mini-bar-pct">{t.drop_rate}%</span>
-                      </div>
-                    </td>
+          {/* Graph 1: Per Minute Drop */}
+          <div className="card span-2">
+            <p className="card-label">⏱️ Per-Minute Call Drops</p>
+            {loading ? <p style={{color:'#9ca3af', fontSize:'0.85rem'}}>Loading chart…</p> : <div className="chart-container"><HourlyDropChart dataSeries={minute_series} /></div>}
+          </div>
+
+          {/* Graph 2: Signal Heartbeat */}
+          <div className="card span-2">
+            <p className="card-label">📈 Avg Signal Heartbeat</p>
+            {loading ? <p style={{color:'#9ca3af', fontSize:'0.85rem'}}>Loading chart…</p> : <div className="chart-container"><SignalTrendChart dataSeries={minute_series} /></div>}
+          </div>
+
+          {/* Graph 3: Signal Distribution */}
+          <div className="card">
+            <p className="card-label">📊 Signal Quality Distribution</p>
+            {loading ? <p style={{color:'#9ca3af', fontSize:'0.85rem'}}>Loading chart…</p> : <div className="chart-container"><SignalDistChart dist={signal_dist} /></div>}
+          </div>
+
+          {/* Top Towers */}
+          <div className="card">
+            <p className="card-label">📡 Top At-Risk Towers</p>
+            {loading ? <p style={{color:'#9ca3af', fontSize:'0.85rem'}}>Loading data…</p> : (
+              <table className="tower-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '3rem' }}>#</th>
+                    <th>Tower ID</th>
+                    <th>Avg Signal</th>
+                    <th className="mini-bar-cell">Drop Rate</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {towers.map((t, i) => (
+                    <tr key={t.id}>
+                      <td><span className="rank-badge">{i + 1}</span></td>
+                      <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{t.id}</td>
+                      <td style={{ color: '#6b7280' }}>{t.avg_signal} dBm</td>
+                      <td className="mini-bar-cell">
+                        <div className="mini-bar-wrap">
+                          <div className="mini-bar-track">
+                            <div className="mini-bar-fill" style={{ width: `${t.drop_rate}%` }} />
+                          </div>
+                          <span className="mini-bar-pct">{t.drop_rate}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
 
-        {/* ── Section 4: Prediction form ───────────────────────── */}
-        <div className="card">
-          <p className="card-label">🔮 Call Drop Predictor</p>
-          <PredictionForm />
+          {/* Predictor Form */}
+          <div className="card span-full">
+            <p className="card-label">🔮 Call Drop Predictor</p>
+            <PredictionForm />
+          </div>
+
         </div>
 
         {/* ── Footer ─────────────────────────────────────────── */}

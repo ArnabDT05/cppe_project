@@ -27,10 +27,10 @@ ChartJS.register(
   Legend
 )
 
-export default function HourlyDropChart({ hourly = [] }) {
+export default function HourlyDropChart({ dataSeries = [] }) {
   // ── Derived values ──────────────────────────────────────────
-  const labels     = hourly.map(r => `${String(r.hour).padStart(2, '0')}:00`)
-  const dropCounts = hourly.map(r => r.drops)
+  const labels     = dataSeries.map(r => r.minute)
+  const dropCounts = dataSeries.map(r => r.drops)
   const maxDrops   = Math.max(...dropCounts, 1)
   const peakIdx    = dropCounts.indexOf(maxDrops)
 
@@ -78,6 +78,7 @@ export default function HourlyDropChart({ hourly = [] }) {
   const options = {
     responsive: true,
     maintainAspectRatio: true,   // chart scales with container width
+    animation: false,            // disabled for smooth live polling
 
     interaction: {
       mode: 'index',             // tooltip shows value for the hovered x position
@@ -96,9 +97,9 @@ export default function HourlyDropChart({ hourly = [] }) {
         cornerRadius: 6,
         displayColors: false,
         callbacks: {
-          // Custom tooltip title: "16:00 — Peak Hour" for the busiest slot
+          // Custom tooltip title
           title: ([item]) => {
-            const suffix = item.dataIndex === peakIdx ? '  ★ Peak Hour' : ''
+            const suffix = item.dataIndex === peakIdx ? '  ★ Peak Minute' : ''
             return `${item.label}${suffix}`
           },
           // Custom body: "26 drops"
@@ -111,7 +112,7 @@ export default function HourlyDropChart({ hourly = [] }) {
       x: {
         title: {
           display: true,
-          text: 'Hour of Day',
+          text: 'Time (Minute)',
           color: '#9ca3af',
           font: { size: 11, weight: '500' },
           padding: { top: 6 },
@@ -146,10 +147,10 @@ export default function HourlyDropChart({ hourly = [] }) {
   }
 
   // ── Render ──────────────────────────────────────────────────
-  if (hourly.length === 0) {
+  if (dataSeries.length === 0) {
     return (
       <p style={{ color: '#9ca3af', fontSize: '0.85rem', padding: '1rem 0' }}>
-        No hourly data available.
+        No time-series data available.
       </p>
     )
   }
@@ -158,7 +159,7 @@ export default function HourlyDropChart({ hourly = [] }) {
     <div style={{ position: 'relative', width: '100%' }}>
       <Line id="hourly-drop-chart" data={data} options={options} />
 
-      {/* Peak hour annotation below chart */}
+      {/* Peak minute annotation below chart */}
       {peakIdx >= 0 && (
         <p style={{
           marginTop: '0.75rem',
@@ -166,7 +167,7 @@ export default function HourlyDropChart({ hourly = [] }) {
           color: '#9ca3af',
           textAlign: 'right',
         }}>
-          ★ Peak hour: <strong style={{ color: '#dc2626' }}>
+          ★ Peak minute: <strong style={{ color: '#dc2626' }}>
             {labels[peakIdx]} — {maxDrops} drops
           </strong>
         </p>

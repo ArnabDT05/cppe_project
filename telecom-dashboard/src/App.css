@@ -5,8 +5,7 @@
 
 /* ── Page shell ────────────────────────────────────────────── */
 .app-wrapper {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-               Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: #f5f7fa;
   min-height: 100vh;
   color: #1a1a1a;
@@ -41,107 +40,99 @@
 }
 
 /* ── Shared card ───────────────────────────────────────────── */
-/*
-  Two-level shadow: a sharp near shadow for depth cue,
-  a soft far shadow for ambient lift.
-  Transition on hover — no jarring jumps.
-*/
 .card {
   background: #ffffff;
   border-radius: 12px;
   padding: 1.6rem 1.8rem;
-  margin-bottom: 1.25rem;
-
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 4px 12px rgba(0, 0, 0, 0.06);
-
-  transition:
-    box-shadow 0.22s ease,
-    transform   0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.22s ease, transform 0.18s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Hover: subtle lift — perceptible but not distracting */
 .card:hover {
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.10);
   transform: translateY(-2px);
 }
 
-/* Card section label */
 .card-label {
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.9px;
   color: #9ca3af;
-  margin-bottom: 1.25rem;         /* consistent 20px below every label */
+  margin-bottom: 1.25rem;
 }
 
-/* ── KPI row ───────────────────────────────────────────────── */
-.kpi-row {
+/* ── Terminal Metrics Row (Light Mode) ─────────────────────── */
+.metrics-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1rem;
   margin-bottom: 1.25rem;
 }
 
-@media (max-width: 640px) {
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 768px) {
+  .metrics-row { grid-template-columns: repeat(3, 1fr); }
 }
 
-.kpi-card {
+.metric-box {
   background: #ffffff;
   border-radius: 12px;
-  padding: 1.25rem 1.2rem;
-
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 4px 12px rgba(0, 0, 0, 0.06);
-
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-
-  /* Same hover as .card, independent transition */
-  transition:
-    box-shadow 0.22s ease,
-    transform   0.18s ease;
+  gap: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.22s ease, transform 0.18s ease;
 }
 
-.kpi-card:hover {
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.10);
+.metric-box:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.10);
   transform: translateY(-2px);
 }
 
-.kpi-card-label {
-  font-size: 0.68rem;
+.metric-title {
+  font-size: 0.65rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
   color: #9ca3af;
+  letter-spacing: 0.5px;
 }
 
-.kpi-card-value {
-  font-size: 1.9rem;
+.metric-val {
+  font-size: 1.5rem;
   font-weight: 700;
-  line-height: 1.1;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   color: #111;
 }
 
-.kpi-card-sub {
-  font-size: 0.73rem;
-  color: #9ca3af;
+/* ── Dashboard Grid (2-column layout) ──────────────────────── */
+.terminal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
 }
 
-.color-red   { color: #dc2626; }
-.color-green { color: #16a34a; }
+.span-2 {
+  grid-column: span 2;
+}
 
-/* ── Chart section ─────────────────────────────────────────── */
-.chart-container { width: 100%; }
+.span-full {
+  grid-column: span 2;
+}
+
+@media (max-width: 800px) {
+  .terminal-grid { grid-template-columns: 1fr; }
+  .span-2, .span-full { grid-column: span 1; }
+}
+
+.chart-container { 
+  width: 100%; 
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* ── Tower table ───────────────────────────────────────────── */
 .tower-table {
@@ -170,7 +161,6 @@
 
 .tower-table tbody tr:last-child td { border-bottom: none; }
 
-/* Hover highlight — very subtle, not distracting */
 .tower-table tbody tr {
   transition: background 0.14s;
 }
@@ -211,7 +201,7 @@
 
 .mini-bar-fill {
   height: 100%;
-  background: #374151;
+  background: #ef4444; /* red for drops */
   border-radius: 999px;
 }
 
