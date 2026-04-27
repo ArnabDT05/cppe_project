@@ -9,7 +9,7 @@ import SignalDistChart from './SignalDistChart'
 import PredictionForm  from './PredictionForm'
 
 // ── API endpoint ────────────────────────────────────────────────
-const API_URL = 'http://127.0.0.1:5000/stats'
+const API_URL = 'http://localhost:5000/stats'
 
 // ── Fallback data (shown while loading or if API is offline) ────
 const FALLBACK = {

@@ -1,12 +1,12 @@
 // PredictionForm.jsx
 // -------------------
-// Standalone form that POSTs to http://127.0.0.1:5000/predict and
-// displays "Call Drop Likely" or "No Drop Expected" below the button.
+// Standalone form that POSTs to http://localhost:5000/predict and
+// displays the Random Forest inference result.
 
 import { useState } from 'react'
 import './PredictionForm.css'
 
-const PREDICT_URL = 'http://127.0.0.1:5000/predict'
+const PREDICT_URL = 'http://localhost:5000/predict'
 
 export default function PredictionForm() {
   // ── Field values ────────────────────────────────────────────
