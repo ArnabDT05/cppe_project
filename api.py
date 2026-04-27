@@ -41,9 +41,13 @@ else:
 
 TOWER_IDS = [f"TOWER_{str(i).zfill(4)}" for i in range(1, 11)]
 
+# Track infinitely growing calls separately from the 5000-row memory buffer
+total_simulated_calls = len(live_df)
+total_dropped_calls = int(live_df["call_drop"].sum()) if not live_df.empty else 0
+
 def generate_live_data():
     """Background thread that adds new synthetic calls every second."""
-    global live_df
+    global live_df, total_simulated_calls, total_dropped_calls
     while True:
         time.sleep(1)
         
@@ -51,12 +55,7 @@ def generate_live_data():
         new_calls = []
         for _ in range(random.randint(1, 5)):
             signal = round(random.uniform(-110, -50), 2)
-            # 15% chance of call drop based on hardcoded threshold (-95)
-            # or just use random simulation:
             call_drop = 1 if signal < -95 else 0
-            
-            # Pick a random hour, heavily weighted towards current hour to show movement
-            # Or just pick random across the 24h spectrum
             hour = random.randint(0, 23)
             
             new_calls.append({
@@ -70,10 +69,14 @@ def generate_live_data():
                 "call_drop": call_drop
             })
             
+            # Increment global counters for the dashboard
+            total_simulated_calls += 1
+            total_dropped_calls += call_drop
+            
         new_df = pd.DataFrame(new_calls)
         live_df = pd.concat([live_df, new_df], ignore_index=True)
         
-        # Keep only the last 5000 rows to prevent memory leak
+        # Keep only the last 5000 rows in memory to prevent memory leak
         if len(live_df) > 5000:
             live_df = live_df.tail(5000)
 
@@ -86,17 +89,16 @@ else:
 
 def load_stats():
     """Compute all analytics from the live in-memory dataframe and return as a dict."""
-    global live_df
+    global live_df, total_simulated_calls, total_dropped_calls
     df = live_df.copy()
 
-    total  = len(df)
+    total = len(df)
     if total == 0:
         return {"summary": {}, "minute_series": [], "towers": []}
-    drops  = int(df["call_drop"].sum())
-    ok     = total - drops
-
-    # Calculate extra terminal metrics
-    drop_rate_pct = (drops / total * 100) if total > 0 else 0
+    
+    # Calculate extra terminal metrics based on the current 5000-row window
+    drops_in_window = int(df["call_drop"].sum())
+    drop_rate_pct = (total_dropped_calls / total_simulated_calls * 100) if total_simulated_calls > 0 else 0
     avg_network_signal = round(df["signal_strength"].mean(), 1)
     critical_calls = int((df["signal_strength"] < -100).sum())
     health_index = round(100 - drop_rate_pct, 1)
@@ -143,9 +145,9 @@ def load_stats():
 
     return {
         "summary": {
-            "total_calls":  total,
-            "calls_dropped": drops,
-            "calls_completed": ok,
+            "total_calls":  total_simulated_calls,
+            "calls_dropped": total_dropped_calls,
+            "calls_completed": total_simulated_calls - total_dropped_calls,
             "drop_pct": round(drop_rate_pct, 1),
             "avg_signal": avg_network_signal,
             "critical_calls": critical_calls,
