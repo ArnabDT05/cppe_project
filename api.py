@@ -250,7 +250,7 @@ if __name__ == "__main__":
     threading.Thread(target=generate_live_data, daemon=True).start()
 
     print("Starting Telecom Analytics API …")
-    print("  GET  /stats   → http://127.0.0.1:5000/stats")
-    print("  POST /predict → http://127.0.0.1:5000/predict")
+    print("  GET  /stats   → http://0.0.0.0:5001/stats")
+    print("  POST /predict → http://0.0.0.0:5001/predict")
     print("  Press Ctrl+C to stop.\n")
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5001, debug=True, use_reloader=False)

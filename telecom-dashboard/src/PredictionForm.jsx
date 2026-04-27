@@ -1,12 +1,12 @@
 // PredictionForm.jsx
 // -------------------
-// Standalone form that POSTs to http://localhost:5000/predict and
+// Standalone form that POSTs to http://localhost:5001/predict and
 // displays the Random Forest inference result.
 
 import { useState } from 'react'
 import './PredictionForm.css'
 
-const PREDICT_URL = 'http://localhost:5000/predict'
+const PREDICT_URL = 'http://localhost:5001/predict'
 
 export default function PredictionForm() {
   // ── Field values ────────────────────────────────────────────
