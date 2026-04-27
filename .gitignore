@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+
+# Node
+node_modules/
+.DS_Store
+
+# Data / Models (Optional: we will track them for this repo unless it gets huge)
+# telecom_data.csv
+# rf_model.pkl
